@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="ADAMS Search Wrapper logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b5fff"/>
+      <stop offset="1" stop-color="#00a99d"/>
+    </linearGradient>
+    <clipPath id="lens"><circle cx="76" cy="68" r="23"/></clipPath>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+  <!-- document with folded corner -->
+  <path d="M28 22h30l14 14v46a6 6 0 0 1-6 6H28a6 6 0 0 1-6-6V28a6 6 0 0 1 6-6z" fill="#fff"/>
+  <path d="M58 22l14 14H62a4 4 0 0 1-4-4z" fill="#b9d2ff"/>
+  <g stroke="#9bb3d6" stroke-width="4" stroke-linecap="round">
+    <path d="M32 46h22M32 58h30M32 70h20"/>
+  </g>
+  <!-- magnifier -->
+  <circle cx="76" cy="68" r="23" fill="#0b5fff" fill-opacity=".18"/>
+  <g clip-path="url(#lens)" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".95">
+    <path d="M64 62h24M64 72h18M64 82h22"/>
+  </g>
+  <circle cx="76" cy="68" r="23" fill="none" stroke="#fff" stroke-width="7"/>
+  <path d="M93 85l15 15" stroke="#fff" stroke-width="10" stroke-linecap="round"/>
+</svg>
