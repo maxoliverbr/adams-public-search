@@ -1,0 +1,578 @@
+openapi: 3.0.1
+info:
+  title: ADAMS Public Search API
+  description: ''
+  version: '1.0'
+servers:
+  - url: https://adams-api.nrc.gov/aps
+paths:
+  /api/search:
+    post:
+      summary: Search Document Library
+      description: "Provides the REST endpoint to execute a boolean search against the ADAMS Public Search service.\n\nDefinitions for the properties can be found on the ADAMS Public Search Glossary page https://adams-search.nrc.gov/terms."
+      operationId: search-document-library
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Search_Query'
+            example:
+              q: string
+              filters:
+                - Generic array
+              legacyLibFilter: false
+              mainLibFilter: false
+              anyFilters:
+                - Generic array
+              sort: string
+              sortDirection: 0
+      responses:
+        '200':
+          description: "This is the response returned by the Search Docs API endpoint.  This what is expected once a successful query is returned.\n\nDefinitions for the properties can be found on the ADAMS Public Search Glossary page https://adams-search.nrc.gov/terms."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Search_Results'
+              example:
+                count: 0
+                results:
+                  - score: 0.75473010097942916
+                    semanticSearch: { }
+                    document:
+                      IdT: string
+                      Id: string
+                      Name: string
+                      AccessionNumber: string
+                      Availability: string
+                      AuthorName:
+                        - Generic array
+                      AuthorAffiliation:
+                        - Generic array
+                      AddresseeName:
+                        - Generic array
+                      AddresseeAffiliation:
+                        - Generic array
+                      CaseReferenceNumber:
+                        - Generic array
+                      Comment: string
+                      DocumentTitle: string
+                      DocumentTitleEquals: string
+                      DocumentTitleWord: string
+                      DateAdded: string
+                      DateAddedTimestamp: string
+                      DocumentType:
+                        - Generic array
+                      DocumentReportNumber:
+                        - Generic array
+                      DocketNumber:
+                        - Generic array
+                      DocumentsFiledInPackage:
+                        - string
+                      LicenseNumber:
+                        - Generic array
+                      Keyword:
+                        - Generic array
+                      PackagesFiledIn:
+                        - Generic array
+                      Url: string
+                      content: string
+                      IsPackage: string
+                      IsLegacy: string
+                      AccessionNumberLower: string
+                      ItemType: string
+                facets:
+                  LicenseNumber:
+                    - Generic array
+                  Keyword:
+                    - value: string
+                      count: 0
+                  AddresseeAffiliation:
+                    - Generic array
+                  DocumentType:
+                    - value: string
+                      count: 0
+                  AuthorName:
+                    - value: string
+                      count: 0
+                  IsLegacy:
+                    - value: string
+                      count: 0
+                  DocumentDate:
+                    - value: string
+                      count: 0
+                  DateAdded:
+                    - value: string
+                      count: 0
+                  AuthorAffiliation:
+                    - value: string
+                      count: 0
+                  DocketNumber:
+                    - Generic array
+                  IsPackage:
+                    - value: string
+                      count: 0
+                  DocumentStatus:
+                    - Generic array
+                  CaseReferenceNumber:
+                    - value: string
+                      count: 0
+                  PackageNumber:
+                    - Generic array
+                  DocumentReportNumber:
+                    - Generic array
+                  DistributionListCodes:
+                    - Generic array
+                  AddresseeName:
+                    - Generic array
+  '/api/search/{accessionNumber}':
+    get:
+      summary: Get Document
+      description: "Provides a REST endpoint to retrieve a document by the Accession Number (ML Number) with all the properties and content available for the document. \n\nDefinitions for the properties can be found on the ADAMS Public Search Glossary page https://adams-search.nrc.gov/terms."
+      operationId: get-document
+      parameters:
+        - name: accessionNumber
+          in: path
+          description: ystem generated ID assigned when a document or package is first added to an ADAMS Library
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "This is the document object returned when the accession number is found. \n\nDefinitions for the properties can be found on the ADAMS Public Search Glossary page https://adams-search.nrc.gov/terms."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APS_Search_Document'
+              example:
+                document:
+                  IdT: string
+                  Id: string
+                  Name: string
+                  AccessionNumber: string
+                  Availability: string
+                  AuthorName:
+                    - string
+                  AuthorAffiliation:
+                    - string
+                  AddresseeName:
+                    - string
+                  AddresseeAffiliation:
+                    - string
+                  CaseReferenceNumber:
+                    - string
+                  Comment: string
+                  ContactPerson: string
+                  DocumentTitle: string
+                  DocumentTitleEquals: string
+                  DocumentTitleWord: string
+                  DateAdded: string
+                  DateAddedTimestamp: string
+                  DocumentDate: string
+                  DocumentType:
+                    - string
+                  DocumentReportNumber:
+                    - string
+                  DocketNumber:
+                    - string
+                  DistributionListCodes:
+                    - string
+                  DocumentsFiledInPackage:
+                    - string
+                  LicenseNumber:
+                    - string
+                  Keyword:
+                    - string
+                  PackagesFiledIn:
+                    - string
+                  Url: string
+                  content: string
+                  IsPackage: string
+                  IsLegacy: string
+                  PhysicalFileLocation: string
+                  EstimatedPageCount: string
+                  AccessionNumberLower: string
+                  ItemType: string
+components:
+  schemas:
+    Search_Query:
+      type: object
+      properties:
+        q:
+          type: string
+        filters:
+          type: array
+          items:
+            type: string
+        legacyLibFilter:
+          type: boolean
+        mainLibFilter:
+          type: boolean
+        anyFilters:
+          type: array
+          items:
+            type: string
+        sort:
+          type: string
+        sortDirection:
+          type: integer
+      x-apim-schema-name: Search Query
+    Search_Results:
+      type: object
+      properties:
+        count:
+          type: integer
+        results:
+          type: array
+          items:
+            required:
+              - score
+              - semanticSearch
+              - document
+            type: object
+            properties:
+              score:
+                type: number
+              semanticSearch:
+                type: object
+              document:
+                type: object
+                properties:
+                  IdT:
+                    type: string
+                  Id:
+                    type: string
+                  Name:
+                    type: string
+                  AccessionNumber:
+                    type: string
+                  Availability:
+                    type: string
+                  AuthorName:
+                    type: array
+                    items:
+                      type: string
+                  AuthorAffiliation:
+                    type: array
+                    items:
+                      type: string
+                  AddresseeName:
+                    type: array
+                    items:
+                      type: string
+                  AddresseeAffiliation:
+                    type: array
+                    items:
+                      type: string
+                  CaseReferenceNumber:
+                    type: array
+                    items:
+                      type: string
+                  Comment:
+                    type: string
+                  DocumentTitle:
+                    type: string
+                  DocumentTitleEquals:
+                    type: string
+                  DocumentTitleWord:
+                    type: string
+                  DateAdded:
+                    type: string
+                  DateAddedTimestamp:
+                    type: string
+                  DocumentType:
+                    type: array
+                    items:
+                      type: string
+                  DocumentReportNumber:
+                    type: array
+                    items:
+                      type: string
+                  DocketNumber:
+                    type: array
+                    items:
+                      type: string
+                  DocumentsFiledInPackage:
+                    type: array
+                    items:
+                      type: string
+                  LicenseNumber:
+                    type: array
+                    items:
+                      type: string
+                  Keyword:
+                    type: array
+                    items:
+                      type: string
+                  PackagesFiledIn:
+                    type: array
+                    items:
+                      type: string
+                  Url:
+                    type: string
+                  content:
+                    type: string
+                  IsPackage:
+                    type: string
+                  IsLegacy:
+                    type: string
+                  AccessionNumberLower:
+                    type: string
+                  ItemType:
+                    type: string
+        facets:
+          type: object
+          properties:
+            LicenseNumber:
+              type: array
+              items:
+                type: string
+            Keyword:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            AddresseeAffiliation:
+              type: array
+              items:
+                type: string
+            DocumentType:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            AuthorName:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            IsLegacy:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            DocumentDate:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            DateAdded:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            AuthorAffiliation:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            DocketNumber:
+              type: array
+              items:
+                type: string
+            IsPackage:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            DocumentStatus:
+              type: array
+              items:
+                type: string
+            CaseReferenceNumber:
+              type: array
+              items:
+                required:
+                  - value
+                  - count
+                type: object
+                properties:
+                  value:
+                    type: string
+                  count:
+                    type: integer
+            PackageNumber:
+              type: array
+              items:
+                type: string
+            DocumentReportNumber:
+              type: array
+              items:
+                type: string
+            DistributionListCodes:
+              type: array
+              items:
+                type: string
+            AddresseeName:
+              type: array
+              items:
+                type: string
+      x-apim-schema-name: Search Results
+    APS_Search_Document:
+      type: object
+      properties:
+        document:
+          type: object
+          properties:
+            IdT:
+              type: string
+            Id:
+              type: string
+            Name:
+              type: string
+            AccessionNumber:
+              type: string
+            Availability:
+              type: string
+            AuthorName:
+              type: array
+              items:
+                type: string
+            AuthorAffiliation:
+              type: array
+              items:
+                type: string
+            AddresseeName:
+              type: array
+              items:
+                type: string
+            AddresseeAffiliation:
+              type: array
+              items:
+                type: string
+            CaseReferenceNumber:
+              type: array
+              items:
+                type: string
+            Comment:
+              type: string
+            ContactPerson:
+              type: string
+            DocumentTitle:
+              type: string
+            DocumentTitleEquals:
+              type: string
+            DocumentTitleWord:
+              type: string
+            DateAdded:
+              type: string
+            DateAddedTimestamp:
+              type: string
+            DocumentDate:
+              type: string
+            DocumentType:
+              type: array
+              items:
+                type: string
+            DocumentReportNumber:
+              type: array
+              items:
+                type: string
+            DocketNumber:
+              type: array
+              items:
+                type: string
+            DistributionListCodes:
+              type: array
+              items:
+                type: string
+            DocumentsFiledInPackage:
+              type: array
+              items:
+                type: string
+            LicenseNumber:
+              type: array
+              items:
+                type: string
+            Keyword:
+              type: array
+              items:
+                type: string
+            PackagesFiledIn:
+              type: array
+              items:
+                type: string
+            Url:
+              type: string
+            content:
+              type: string
+            IsPackage:
+              type: string
+            IsLegacy:
+              type: string
+            PhysicalFileLocation:
+              type: string
+            EstimatedPageCount:
+              type: string
+            AccessionNumberLower:
+              type: string
+            ItemType:
+              type: string
+      x-apim-schema-name: APS Search Document
+  securitySchemes:
+    apiKeyHeader:
+      type: apiKey
+      name: Ocp-Apim-Subscription-Key
+      in: header
+    apiKeyQuery:
+      type: apiKey
+      name: subscription-key
+      in: query
+security:
+  - apiKeyHeader: [ ]
+  - apiKeyQuery: [ ]
