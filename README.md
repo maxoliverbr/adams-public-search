@@ -30,7 +30,8 @@ field by default, and keeps your ADAMS subscription key on the server.
 - `GET /documents/:accession`: one document by ML number, unwrapped
 - `GET /search`: simplified search with typed, validated query parameters
 - `POST /search`: raw passthrough of the upstream request body, for anything the simple params can't express
-- Interactive OpenAPI docs at `/openapi` (JSON at `/openapi/json`)
+- End-to-end type safety: typed requests and responses, plus an [Eden Treaty](https://elysiajs.com/eden/overview) client (see below)
+- Interactive OpenAPI docs at `/openapi` (JSON at `/openapi/json`), including response shapes
 - Upstream errors (401, 404, ...) are passed through with their original status
 - Mocked tests plus live tests against the real ADAMS API
 
@@ -84,6 +85,35 @@ curl -X POST localhost:3000/search -H 'content-type: application/json' \
 }
 ```
 
+## Typed client (Eden)
+
+The app exports its type, so any TypeScript client gets autocomplete and compile-time checks with
+[Eden Treaty](https://elysiajs.com/eden/overview):
+
+```ts
+import { treaty } from "@elysiajs/eden";
+import type { App } from "adams-public-search/src/index"; // or a relative path
+
+const api = treaty<App>("localhost:3000");
+
+const { data, error } = await api.search.get({
+  query: { q: "reactor", docket: "05000390", from: "2020-01-01", order: "desc" },
+});
+if (error) throw new Error(`ADAMS error ${error.status}`);
+data.results[0]?.DocumentTitle; // typed: string | null | undefined
+
+const doc = await api.documents({ accession: "ML20055E745" }).get();
+```
+
+How the types stay honest:
+
+- Request params are validated at runtime and typed from the same schema (bad dates or enums return `422`).
+- Every response from ADAMS is **validated against a schema before it is returned**. If ADAMS changes shape, you get a
+  `502 Unexpected ADAMS response shape` (with the offending path) instead of silently wrong data.
+- The schemas are the published spec **corrected against live data** (nullable fields, `DistributionListCodes` is a string,
+  extra fields like `PackageNumber`). Unknown extra fields are allowed.
+- Upstream error statuses (400, 401, 403, 404, 429, 500, 502) are typed on `error.status`; their bodies are passed through as-is.
+
 ## Search parameters
 
 | Param | Meaning |
@@ -105,10 +135,12 @@ A single value is a required filter (ANDed with the others). Repeated values are
 
 ```sh
 bun test            # mocked tests always run; live tests run when a real key is in .env
+bun run typecheck   # strict tsc over src/ and tests (includes the Eden type-level checks)
 bun run dev         # watch mode
 ```
 
 - `src/index.ts`: the app and `buildSearchBody`, which maps query params to the upstream body
+- `src/eden.test.ts`: typed Eden client tests; `@ts-expect-error` lines prove invalid calls fail to compile
 - `src/api.test.ts`: spec-driven tests with a mocked `fetch`, using `docs/adams-public-search-api.yaml`
 - `src/live.test.ts`: tests against the real ADAMS API (skipped without a real key)
 - `site/`: the landing page, deployed to GitHub Pages by `.github/workflows/pages.yml`

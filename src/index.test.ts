@@ -27,8 +27,8 @@ test("date range becomes one OData DocumentDate filter; quotes are escaped", () 
   expect(buildSearchBody({ from: "2020-01-01", to: "2020-12-31" }).filters).toEqual([
     { field: "DocumentDate", value: "(DocumentDate ge '2020-01-01' and DocumentDate le '2020-12-31')" },
   ]);
-  expect(buildSearchBody({ from: "2020-01-01" }).filters[0]).toMatchObject({ value: "(DocumentDate ge '2020-01-01')" });
-  expect(buildSearchBody({ from: "x' or 1 eq 1 or 'y" }).filters[0]).toMatchObject({ value: expect.stringContaining("x'' or") });
+  expect(buildSearchBody({ from: "2020-01-01" }).filters[0]!).toMatchObject({ value: "(DocumentDate ge '2020-01-01')" });
+  expect(buildSearchBody({ from: "x' or 1 eq 1 or 'y" }).filters[0]!).toMatchObject({ value: expect.stringContaining("x'' or") });
 });
 
 test("library defaults to both; main/legacy restrict", () => {
