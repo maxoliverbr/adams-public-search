@@ -117,9 +117,20 @@ describe("GET /search", () => {
 });
 
 describe("POST /search", () => {
+  test("rejects the spec's string[] filters (upstream 500s on them) with 422", async () => {
+    mock(searchRes);
+    expect((await post("/search", { q: "x", filters: ["DocketNumber eq '1'"] })).status).toBe(422);
+    expect(calls).toHaveLength(0);
+  });
+  test("502 when upstream returns an unexpected shape", async () => {
+    mock({ count: "many", results: [] });
+    const r = await post("/search", { q: "x" });
+    expect(r.status).toBe(502);
+    expect(((await r.json()) as any).error).toContain("Unexpected ADAMS response shape");
+  });
   test("forwards body verbatim and returns upstream JSON untouched", async () => {
     mock(searchRes);
-    const body = { q: "steam", filters: ["f"], anyFilters: [], sort: "", sortDirection: 1 };
+    const body = { q: "steam", filters: [{ field: "DocketNumber", value: "1", operator: "equals" }], anyFilters: [], sort: "", sortDirection: 1 };
     const r = await post("/search", body);
     expect(sent()).toEqual(body);
     expect(await r.json()).toEqual(searchRes);
