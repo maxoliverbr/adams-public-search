@@ -179,6 +179,68 @@ async function upstream<S extends TSchema>(path: string, schema: S, init: Reques
 
 const post = (body: UpstreamSearchBody) => ({ method: "POST", body: JSON.stringify(body) });
 
+async function search(query: SearchQuery): Promise<SearchResponse> {
+  const data = await upstream("", UpstreamSearchResponse, post(buildSearchBody(query)));
+  return {
+    count: data.count,
+    results: data.results.map(({ score, document: { content, ...doc } }) => ({
+      score,
+      ...doc,
+      ...(query.content ? { content } : {}),
+    })),
+    facets: data.facets,
+  };
+}
+const getDocument = async (accession: string) =>
+  (await upstream(`/${encodeURIComponent(accession)}`, UpstreamDocumentResponse)).document;
+
+// ---------- MCP (Streamable HTTP, stateless, JSON responses only) ----------
+// ponytail: hand-rolled JSON-RPC, no SDK, no SSE/sessions/batching. Add @modelcontextprotocol/sdk if you need streaming.
+
+const MCP_VERSION = "2025-06-18";
+const GetDocumentArgs = t.Object({ accession: t.String({ description: "ADAMS accession number, e.g. ML12345A678" }) });
+const tools = [
+  { name: "search_documents", description: "Search NRC ADAMS public documents by text and filters.", inputSchema: SearchQuery, run: (a: SearchQuery) => search(a) },
+  { name: "get_document", description: "Fetch one ADAMS document's metadata by accession number.", inputSchema: GetDocumentArgs, run: (a: Static<typeof GetDocumentArgs>) => getDocument(a.accession) },
+];
+
+async function callTool(name: unknown, args: unknown) {
+  const tool = tools.find((x) => x.name === name);
+  if (!tool) return undefined;
+  const text = (s: string, isError = false) => ({ content: [{ type: "text", text: s }], isError });
+  if (!Value.Check(tool.inputSchema, args ?? {})) {
+    const e = [...Value.Errors(tool.inputSchema, args ?? {})][0];
+    return text(`Invalid arguments: ${e?.path} ${e?.message}`, true);
+  }
+  try {
+    return text(JSON.stringify(await tool.run((args ?? {}) as never)));
+  } catch (e) {
+    return text(e instanceof UpstreamError ? `ADAMS ${e.status}: ${e.body}` : String(e), true);
+  }
+}
+
+/** Handles one JSON-RPC message; returns undefined for notifications (no reply). */
+export async function mcp(msg: any): Promise<object | undefined> {
+  const { id, method, params } = msg ?? {};
+  if (id === undefined) return undefined;
+  const ok = (result: object) => ({ jsonrpc: "2.0", id, result });
+  const fail = (code: number, message: string) => ({ jsonrpc: "2.0", id, error: { code, message } });
+  switch (method) {
+    case "initialize":
+      return ok({ protocolVersion: MCP_VERSION, capabilities: { tools: {} }, serverInfo: { name: "adams-public-search", version: "0.1.0" } });
+    case "ping":
+      return ok({});
+    case "tools/list":
+      return ok({ tools: tools.map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });
+    case "tools/call": {
+      const r = await callTool(params?.name, params?.arguments);
+      return r ? ok(r) : fail(-32602, `Unknown tool: ${params?.name}`);
+    }
+    default:
+      return fail(-32601, `Method not found: ${method}`);
+  }
+}
+
 // ---------- App ----------
 
 export const app = new Elysia()
@@ -193,22 +255,22 @@ export const app = new Elysia()
     async ({ params }) => (await upstream(`/${encodeURIComponent(params.accession)}`, UpstreamDocumentResponse)).document,
     { response: { 200: AdamsDocument, ...errorResponses } },
   )
-  .get(
-    "/search",
-    async ({ query }): Promise<SearchResponse> => {
-      const data = await upstream("", UpstreamSearchResponse, post(buildSearchBody(query)));
-      return {
-        count: data.count,
-        results: data.results.map(({ score, document: { content, ...doc } }) => ({
-          score,
-          ...doc,
-          ...(query.content ? { content } : {}),
-        })),
-        facets: data.facets,
-      };
+  .get("/search", ({ query }) => search(query), {
+    query: SearchQuery,
+    response: { 200: SearchResponse, ...errorResponses },
+  })
+  .post(
+    "/mcp",
+    async ({ request }) => {
+      const msg = await request.json().catch(() => null);
+      if (msg === null || Array.isArray(msg))
+        return Response.json({ jsonrpc: "2.0", id: null, error: { code: -32600, message: "Expected a single JSON-RPC object" } }, { status: 400 });
+      const reply = await mcp(msg);
+      return reply ? Response.json(reply) : new Response(null, { status: 202 });
     },
-    { query: SearchQuery, response: { 200: SearchResponse, ...errorResponses } },
+    { detail: { hide: true } },
   )
+  .get("/mcp", () => new Response(null, { status: 405, headers: { Allow: "POST" } }), { detail: { hide: true } })
   .post("/search", ({ body }) => upstream("", UpstreamSearchResponse, post(body)), {
     body: UpstreamSearchBody,
     response: { 200: UpstreamSearchResponse, ...errorResponses },
