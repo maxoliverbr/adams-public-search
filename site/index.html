@@ -28,9 +28,9 @@ h1 span{background:linear-gradient(90deg,var(--a) 10%,#a3b84a 50%,var(--b));-web
 .btn:hover{transform:translateY(-2px)}
 .btn.p{background:var(--a);color:#042f2a;border:0}
 .pip{display:inline-flex;gap:12px;align-items:center;padding:10px 16px;border:1px solid var(--line);border-radius:10px;background:var(--card);font:14px ui-monospace,Menlo,monospace;max-width:100%}
-.pip span{overflow:auto;white-space:nowrap}
+.pip span{overflow:auto;white-space:nowrap;scrollbar-width:none}
 .pip button{border:0;background:none;color:var(--a);cursor:pointer;font:inherit}
-pre{margin:0;padding:22px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:auto;font:14px/1.7 ui-monospace,Menlo,monospace;text-align:left}
+pre{margin:0;padding:22px;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:auto;scrollbar-color:var(--line) transparent;font:14px/1.7 ui-monospace,Menlo,monospace;text-align:left}
 code{font:.9em ui-monospace,Menlo,monospace;color:var(--a)}
 .k{color:var(--b)}.s{color:var(--a)}.c{color:var(--mut)}
 .code{max-width:760px;margin:40px auto 0;box-shadow:0 30px 80px -30px color-mix(in srgb,var(--a) 40%,transparent)}
@@ -89,7 +89,9 @@ bun run dev   <span class="c"># http://localhost:3000</span></pre>
 curl localhost:3000/documents/ML20055E745
 
 <span class="c"># two dockets (OR), main library only</span>
-curl <span class="s">'localhost:3000/search?docket=05000390&amp;docket=05000391&amp;library=main'</span></pre>
+curl -G localhost:3000/search \
+  -d <span class="s">docket=05000390</span> -d <span class="s">docket=05000391</span> \
+  -d <span class="s">library=main</span></pre>
 </div>
 <p class="note">This site is static documentation. The API is self-hosted and needs your own ADAMS subscription key (<a href="https://adams-api-developer.nrc.gov" style="color:var(--a)">get one here</a>), which must never be published in a browser.</p>
 </section>
