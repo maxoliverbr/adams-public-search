@@ -57,3 +57,16 @@ describe("live ADAMS", () => {
     expect(j.results.every((r: any) => String(r.IsLegacy).toLowerCase() !== "true")).toBe(true);
   }, 30000);
 });
+
+describe("live ADAMS: filter-only searches (no q)", () => {
+  live("docket alone (no q) returns results — q=\"*\" would return 0", async () => {
+    const j: any = await (await get("/search?docket=05000390")).json();
+    expect(j.count).toBeGreaterThan(0);
+    expect(j.results.every((r: any) => r.DocketNumber.includes("05000390"))).toBe(true);
+  }, 30000);
+
+  live("date range alone (no q) returns results", async () => {
+    const j: any = await (await get("/search?from=2020-01-01&to=2020-01-31")).json();
+    expect(j.count).toBeGreaterThan(0);
+  }, 30000);
+});

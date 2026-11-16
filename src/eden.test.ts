@@ -4,9 +4,10 @@ import { app, type AdamsDocument, type App, type SearchResponse } from "./index"
 
 // In-process typed client: no network to our app, `fetch` to ADAMS is mocked.
 // `bun run typecheck` fails if any call below stops matching the server's types.
-const api = treaty<App>(app);
+// parseDate:false — Eden otherwise turns ISO strings into Date objects at runtime while the types say string.
+const api = treaty<App>(app, { parseDate: false });
 
-const doc = { AccessionNumber: "ML1", DocumentTitle: "T", DocketNumber: ["05000390"], DistributionListCodes: "ABC", content: "BIG", PackageNumber: null };
+const doc = { AccessionNumber: "ML1", DocumentTitle: "T", DocumentDate: "2020-01-07T00:00:00.000Z", DocketNumber: ["05000390"], DistributionListCodes: "ABC", content: "BIG", PackageNumber: null };
 const searchRes = { count: 1, results: [{ score: 0.5, semanticSearch: {}, document: doc }], facets: { Keyword: ["k"] } };
 
 const realFetch = globalThis.fetch;
@@ -32,6 +33,7 @@ test("api.search.get({query}) is typed end to end", async () => {
   expect(r?.results[0]?.score).toBe(0.5);
   expect(r?.results[0]?.content).toBe("BIG");
   expect(r?.results[0]?.DocumentTitle).toBe("T");
+  expect(typeof r?.results[0]?.DocumentDate).toBe("string"); // matches the static type (needs parseDate:false)
 });
 
 test("api.search.post(body) is typed with the real filter shape", async () => {

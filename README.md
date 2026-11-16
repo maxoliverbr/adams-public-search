@@ -94,7 +94,9 @@ The app exports its type, so any TypeScript client gets autocomplete and compile
 import { treaty } from "@elysiajs/eden";
 import type { App } from "adams-public-search/src/index"; // or a relative path
 
-const api = treaty<App>("localhost:3000");
+// parseDate:false keeps ISO date strings as strings, matching the types
+// (Eden otherwise converts them to Date objects at runtime).
+const api = treaty<App>("localhost:3000", { parseDate: false });
 
 const { data, error } = await api.search.get({
   query: { q: "reactor", docket: "05000390", from: "2020-01-01", order: "desc" },
@@ -114,11 +116,28 @@ How the types stay honest:
   extra fields like `PackageNumber`). Unknown extra fields are allowed.
 - Upstream error statuses (400, 401, 403, 404, 429, 500, 502) are typed on `error.status`; their bodies are passed through as-is.
 
+## Examples
+
+Runnable scripts in [`examples/`](examples), all using the typed Eden client. Start the API (`bun run dev`), then:
+
+| Script | Goal |
+| --- | --- |
+| `bun examples/weekly-digest.ts [days]` | A Markdown digest of what the NRC published lately: type mix, most active authors, latest letters. Pipe it to a file or Slack. |
+| `bun examples/docket-timeline.ts [docket…]` | How regulatory activity around a plant changed over the decades, as an ASCII chart. Pass several dockets to compare sites. |
+| `bun examples/topic-radar.ts "<topic>" [from]` | Who is involved in a topic: document mix, most active organisations, dockets, and who writes to whom. |
+| `bun examples/package-dossier.ts [ML…]` | What is inside an ADAMS package: fetches the package and all its documents concurrently and prints a tree. |
+
+For example, `bun examples/topic-radar.ts "small modular reactor" 2024-01-01` reports 2,114 matching documents and shows
+that `NRC/NRR` is both the most active author and, by far, the most addressed recipient.
+
+Set `ADAMS_URL` if the API isn't on `localhost:3000`. Shared helpers (`must`, `topFacet`, `pmap`) are in
+[`examples/client.ts`](examples/client.ts). The examples are type-checked by `bun run typecheck` and CI.
+
 ## Search parameters
 
 | Param | Meaning |
 | --- | --- |
-| `q` | Search text (default `*`) |
+| `q` | Search text. Optional: omit it to search by filters only |
 | `docket`, `type` | Exact match. Repeat the param for any-of |
 | `author`, `addressee`, `keyword` | Contains match. Repeat the param for any-of |
 | `from`, `to` | Document date range, `YYYY-MM-DD` |
