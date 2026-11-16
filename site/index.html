@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ADAMS Search Wrapper</title>
+<meta name="description" content="A small Bun + Elysia API that simplifies searching the NRC ADAMS Public Search service.">
+<style>
+  :root { --bg:#fafaf7; --fg:#1c1c1a; --muted:#66665f; --card:#fff; --line:#e3e3dc; --accent:#0b5fff; --code:#f1f1ec; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#131412; --fg:#ececE6; --muted:#9a9a92; --card:#1b1c19; --line:#2c2d29; --accent:#6ea0ff; --code:#22231f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.6 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 80px; }
+  h1 { font-size: clamp(2rem, 6vw, 2.8rem); line-height:1.15; margin:0 0 12px; letter-spacing:-.02em; }
+  h2 { font-size:1.2rem; margin:48px 0 12px; }
+  p { margin: 0 0 14px; }
+  .lead { font-size:1.15rem; color:var(--muted); max-width: 56ch; }
+  a { color: var(--accent); }
+  .btns { display:flex; flex-wrap:wrap; gap:10px; margin:24px 0 0; }
+  .btn { display:inline-block; padding:9px 16px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); text-decoration:none; font-weight:600; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+  pre, code { font: 0.9rem/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  pre { background:var(--code); border:1px solid var(--line); border-radius:8px; padding:14px 16px; overflow-x:auto; margin:0 0 14px; }
+  :not(pre) > code { background:var(--code); padding:1px 6px; border-radius:4px; }
+  table { width:100%; border-collapse:collapse; font-size:.95rem; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:600; }
+  .note { border-left:3px solid var(--accent); padding:4px 14px; color:var(--muted); background:var(--card); border-radius:0 8px 8px 0; }
+  footer { margin-top:56px; color:var(--muted); font-size:.9rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Search NRC ADAMS<br>without the filter gymnastics.</h1>
+  <p class="lead">A small <a href="https://bun.sh">Bun</a> + <a href="https://elysiajs.com">Elysia</a> API in front of the
+  <a href="https://adams-api-developer.nrc.gov/api-details#api=adams-public-search-api&operation=get-document">ADAMS Public Search API</a>.
+  Plain query parameters in, clean JSON out.</p>
+  <div class="btns">
+    <a class="btn primary" href="https://github.com/maxoliverbr/adams-public-search">View on GitHub</a>
+    <a class="btn" href="https://adams-api-developer.nrc.gov">Get an ADAMS API key</a>
+  </div>
+
+  <h2>Why</h2>
+  <p>The upstream search endpoint takes a JSON body whose <code>filters</code> are objects like
+  <code>{"field","value","operator"}</code>, even though the published spec says strings. This wrapper hides that behind
+  a <code>GET /search</code> you can call from a browser or <code>curl</code>, and keeps your subscription key on the server.</p>
+
+  <h2>Quick start</h2>
+<pre>git clone https://github.com/maxoliverbr/adams-public-search
+cd adams-public-search
+bun install
+echo "ADAMS_API_KEY=your-key" &gt; .env
+bun run dev          # http://localhost:3000</pre>
+
+  <h2>Examples</h2>
+<pre># one document by accession number
+curl localhost:3000/documents/ML20055E745
+
+# search: docket + date range, newest first
+curl 'localhost:3000/search?q=reactor&amp;docket=05000390&amp;from=2020-01-01&amp;to=2020-12-31&amp;sort=DocumentDate&amp;order=desc'
+
+# two dockets (OR), main library only
+curl 'localhost:3000/search?q=steam+generator&amp;docket=05000390&amp;docket=05000391&amp;library=main'</pre>
+
+  <h2>Endpoints</h2>
+  <table>
+    <tr><th>Route</th><th>What it does</th></tr>
+    <tr><td><code>GET /documents/:accession</code></td><td>One document by ML number.</td></tr>
+    <tr><td><code>GET /search</code></td><td>Simplified search. Results omit the large <code>content</code> field unless <code>content=true</code>.</td></tr>
+    <tr><td><code>POST /search</code></td><td>Raw passthrough of the upstream request body.</td></tr>
+    <tr><td><code>GET /openapi</code></td><td>Interactive API docs. Spec at <code>/openapi/json</code>.</td></tr>
+  </table>
+
+  <h2>Search parameters</h2>
+  <table>
+    <tr><th>Param</th><th>Meaning</th></tr>
+    <tr><td><code>q</code></td><td>Search text (default <code>*</code>).</td></tr>
+    <tr><td><code>docket</code>, <code>type</code></td><td>Exact match. Repeat the param for any-of.</td></tr>
+    <tr><td><code>author</code>, <code>addressee</code>, <code>keyword</code></td><td>Contains match. Repeat for any-of.</td></tr>
+    <tr><td><code>from</code>, <code>to</code></td><td>Document date range, <code>YYYY-MM-DD</code>.</td></tr>
+    <tr><td><code>library</code></td><td><code>main</code>, <code>legacy</code> or <code>all</code> (default).</td></tr>
+    <tr><td><code>sort</code>, <code>order</code></td><td>Field name and <code>asc</code> / <code>desc</code>.</td></tr>
+  </table>
+
+  <p class="note" style="margin-top:28px">This site is static documentation. The API itself is self-hosted: it needs your own ADAMS subscription key, which must never be published in a browser.</p>
+
+  <footer>Not affiliated with the U.S. Nuclear Regulatory Commission. Data comes from the public ADAMS service.</footer>
+</main>
+</body>
+</html>
