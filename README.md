@@ -169,6 +169,10 @@ bun run dev         # watch mode
 The wrapper adds your subscription key to every upstream request and does **not** authenticate its own callers.
 Anyone who can reach it uses your ADAMS quota, so keep it on localhost or behind your own auth/proxy.
 
+## License
+
+[MIT](LICENSE) © 2026 Max Oliver
+
 ## Disclaimer
 
 Not affiliated with the U.S. Nuclear Regulatory Commission. Data comes from the public ADAMS service.
