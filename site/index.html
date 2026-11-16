@@ -49,12 +49,16 @@ a.card{display:block;color:inherit}a.card code{color:var(--a)}
 .pt{padding:16px 18px;background:var(--card);border:1px solid var(--line);border-radius:14px}
 .pt b{display:block;margin-bottom:2px}.pt span{color:var(--mut);font-size:15px}
 .sec-link{text-align:center;margin-top:20px;color:var(--mut)}.sec-link a{color:var(--a)}
+.diagram{width:100%;height:auto;display:block;max-width:1000px;margin:0 auto}
+.diagram .box{fill:var(--card);stroke:var(--line);stroke-width:1.5}.diagram .hot{stroke:var(--a)}.diagram .ext{stroke:var(--b)}
+.diagram text{fill:var(--fg);font:600 14px Inter,system-ui,sans-serif}.diagram .m{fill:var(--mut);font:12px ui-monospace,Menlo,monospace}
+.diagram .ln{stroke:var(--mut);stroke-width:1.5;fill:none}.diagram .t{fill:var(--a);font:600 11px Inter,sans-serif;letter-spacing:.08em}
 @media(max-width:640px){nav div a:not(.gh){display:none}.hero{padding-top:64px}}
 </style>
 </head>
 <body>
 <div class="w">
-<nav><b><img src="logo.svg" alt="" width="28" height="28">ADAMS Search</b><div><a href="#features">Features</a><a href="#types">Type safety</a><a href="#examples">Examples</a><a href="#start">Quick start</a><a href="https://github.com/maxoliverbr/adams-public-search#readme">Docs</a><a class="gh" href="https://github.com/maxoliverbr/adams-public-search">GitHub ↗</a></div></nav>
+<nav><b><img src="logo.svg" alt="" width="28" height="28">ADAMS Search</b><div><a href="#features">Features</a><a href="#architecture">Architecture</a><a href="#types">Type safety</a><a href="#examples">Examples</a><a href="#start">Quick start</a><a href="https://github.com/maxoliverbr/adams-public-search#readme">Docs</a><a class="gh" href="https://github.com/maxoliverbr/adams-public-search">GitHub ↗</a></div></nav>
 
 <header class="hero">
 <span class="pill">Bun · Elysia · Eden · OpenAPI · Typed end to end</span>
@@ -83,6 +87,28 @@ curl -G localhost:3000/search \
 <div class="card"><i>🔑</i><h3>Key stays server-side</h3><p>Your ADAMS subscription key is added upstream and never exposed to callers.</p></div>
 <div class="card"><i>🔁</i><h3>Raw passthrough</h3><p><code>POST /search</code> forwards a typed upstream body for anything the simple params can't express.</p></div>
 </div>
+</section>
+
+<section id="architecture">
+<h2>How it fits together</h2><p class="sub">One small server between your code and ADAMS. REST and MCP share the same validated core.</p>
+<svg class="diagram" viewBox="0 0 1000 395" role="img" aria-label="Architecture: clients call the Elysia app over REST or MCP; the app validates, builds the upstream query and calls the NRC ADAMS API with the subscription key">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="var(--mut)"/></marker></defs>
+<text class="t" x="20" y="24">CLIENTS</text><text class="t" x="330" y="24">THIS APP (BUN + ELYSIA)</text><text class="t" x="800" y="24">UPSTREAM</text>
+<rect class="box " x="20" y="50" width="220" height="64" rx="12"/><text x="130.0" y="80.0" text-anchor="middle">Your code</text><text class="m" x="130.0" y="98.0" text-anchor="middle">Eden treaty&lt;App&gt; client</text>
+<rect class="box " x="20" y="150" width="220" height="64" rx="12"/><text x="130.0" y="180.0" text-anchor="middle">HTTP / curl</text><text class="m" x="130.0" y="198.0" text-anchor="middle">GET /search · /documents</text>
+<rect class="box " x="20" y="250" width="220" height="64" rx="12"/><text x="130.0" y="280.0" text-anchor="middle">AI agents</text><text class="m" x="130.0" y="298.0" text-anchor="middle">MCP: Claude, IDEs</text>
+<rect class="box hot" x="320" y="40" width="340" height="340" rx="16"/>
+<rect class="box " x="345" y="60" width="290" height="52" rx="12"/><text x="490.0" y="84.0" text-anchor="middle">Routes</text><text class="m" x="490.0" y="102.0" text-anchor="middle">/search · /documents/:id · /mcp</text>
+<rect class="box " x="345" y="140" width="290" height="52" rx="12"/><text x="490.0" y="164.0" text-anchor="middle">Validate input</text><text class="m" x="490.0" y="182.0" text-anchor="middle">TypeBox · 422 on bad params</text>
+<rect class="box " x="345" y="220" width="290" height="52" rx="12"/><text x="490.0" y="244.0" text-anchor="middle">Build ADAMS query</text><text class="m" x="490.0" y="262.0" text-anchor="middle">filters · anyFilters · dates</text>
+<rect class="box " x="345" y="300" width="290" height="52" rx="12"/><text x="490.0" y="324.0" text-anchor="middle">Validate response</text><text class="m" x="490.0" y="342.0" text-anchor="middle">shape check · 502 if changed</text>
+<rect class="box ext" x="780" y="150" width="200" height="100" rx="12"/><text x="880.0" y="198.0" text-anchor="middle">NRC ADAMS API</text><text class="m" x="880.0" y="216.0" text-anchor="middle">adams-api.nrc.gov</text>
+<path class="ln" marker-end="url(#ar)" d="M240 82H290V86H320"/><path class="ln" marker-end="url(#ar)" d="M240 182H320"/><path class="ln" marker-end="url(#ar)" d="M240 282H290V120H320"/>
+<path class="ln" marker-end="url(#ar)" d="M490 112V140"/><path class="ln" marker-end="url(#ar)" d="M490 192V220"/>
+<path class="ln" marker-end="url(#ar)" d="M660 246H720V200H780"/><text class="m" x="690" y="268">+ API key</text>
+<path class="ln" marker-end="url(#ar)" d="M780 230H740V326H635"/>
+<text class="m" x="20" y="360">OpenAPI docs at /openapi</text><text class="m" x="20" y="380">generated from the same schemas</text>
+</svg>
 </section>
 
 <section id="types">
