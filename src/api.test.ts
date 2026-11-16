@@ -89,10 +89,10 @@ describe("GET /search", () => {
     const j: any = await (await get("/search?content=true")).json();
     expect(j.results[0].content).toBe("BIG");
   });
-  test("defaults: q=*, no filters, both libraries, asc", async () => {
+  test("defaults: empty q, no filters, both libraries, asc", async () => {
     mock(searchRes);
     await get("/search");
-    expect(sent()).toEqual({ q: "*", filters: [], anyFilters: [], mainLibFilter: true, legacyLibFilter: true, sort: "", sortDirection: 0 });
+    expect(sent()).toEqual({ q: "", filters: [], anyFilters: [], mainLibFilter: true, legacyLibFilter: true, sort: "", sortDirection: 0 });
   });
   test("repeated params and date range become filters", async () => {
     mock(searchRes);

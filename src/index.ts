@@ -132,7 +132,7 @@ export function buildSearchBody(p: SearchQuery): Required<UpstreamSearchBody> {
     filters.push({ field: "DocumentDate", value: `(${parts.filter(Boolean).join(" and ")})` });
   }
   return {
-    q: p.q ?? "*",
+    q: p.q ?? "", // NOT "*": ADAMS returns 0 results for q="*" combined with any filter
     filters,
     anyFilters,
     mainLibFilter: p.library !== "legacy",
